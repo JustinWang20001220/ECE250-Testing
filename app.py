@@ -25,6 +25,9 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
+    # Maybe render the html with description of the tests.
+    # The webpage should be able to make request to the run_test api
+    # and display the results on the same page
     return render_template("./templates/online_tester.html")
 
 @app.route("/api/run_test", methods=["POST"])
@@ -48,3 +51,10 @@ def run_test():
 
 if __name__ == "__main__":
     app.run("0.0.0.0", 1453)
+
+
+
+# TODO List
+# 1. login system: website stores the uploads from each user
+# 2. tests database: users can upload their tests to the website and share among all users
+# 3. test choosing: users can choose any tests from the database for their own testing
