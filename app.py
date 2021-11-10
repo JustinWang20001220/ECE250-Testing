@@ -1,6 +1,7 @@
 # from flask_restful import Api
 from flask import Flask, request, render_template, jsonify
 import subprocess
+import re, fileinput
 # from flask_cors import CORS
 # from flask_session import Session
 # from routes import Upload, Report
@@ -40,7 +41,8 @@ def run_test():
 
         # copy uploaded file into testing environment
         subprocess.run(["cp", f"./submissions/{random_id}.h", "./test_space/Search_tree.h"])
-
+        publicate("./test_space/Search_tree.h")
+        
         # compile the test
         subprocess.run(["g++", "-std=c++11", "./test_space/test.cpp", "-o", f"./test_space/test{random_id}"])   
 
@@ -49,12 +51,19 @@ def run_test():
         return jsonify({"test_result": test.stdout})
 
 
+def publicate(file_path):
+    file = open(file_path, "r")
+    text = file.read()
+    file.close()
+
+    text = re.sub("private", "public", text)
+
+    file = open(file_path, "w")
+    file.write(text)
+    file.close()
+
+
+
 if __name__ == "__main__":
     app.run("0.0.0.0", 1453)
 
-
-
-# TODO List
-# 1. login system: website stores the uploads from each user
-# 2. tests database: users can upload their tests to the website and share among all users
-# 3. test choosing: users can choose any tests from the database for their own testing

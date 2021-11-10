@@ -21,7 +21,7 @@ class Search_tree {
 	public:
 		class Iterator;
 
-	private:
+	public:
 		class Node {
 			public:
 				Type node_value;
@@ -51,7 +51,7 @@ class Search_tree {
 				bool insert( Type const &obj, Node *&to_this );
 				bool erase( Type const &obj, Node *&to_this );
 
-			private:
+			public:
 				// check if the sub-tree rooted at the current node is balanced
 				bool is_balanced() const;
 				// left-left or right-right balancing
@@ -74,12 +74,12 @@ class Search_tree {
 
 	public:
 		class Iterator {
-			private:
+			public:
 				Search_tree *containing_tree;
 				Node *current_node;
 				bool is_end;
 
-				// The constructor is private so that only the search tree can create an iterator
+				// The constructor is public so that only the search tree can create an iterator
 				Iterator( Search_tree *tree, Node *starting_node );
 
 			public:
