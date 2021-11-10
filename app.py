@@ -1,5 +1,5 @@
 # from flask_restful import Api
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, make_response
 import subprocess
 import re, fileinput
 # from flask_cors import CORS
@@ -29,11 +29,20 @@ def index():
     # Maybe render the html with description of the tests.
     # The webpage should be able to make request to the run_test api
     # and display the results on the same page
-    return render_template("./templates/online_tester.html")
+    return render_template("online_tester.html")
 
 @app.route("/api/run_test", methods=["POST"])
 def run_test():
+    print("running")
     if request.method == "POST":
+        # if "random_id" not in request.form:
+        #     print("id not found")
+        #     return make_response(jsonify(test_result = "Oops"), 200)
+
+        if "file" not in request.files:
+            print("file not found")
+            return make_response(jsonify(test_result = "Oops No file"), 200)
+
         h_file = request.files["file"]
         random_id = request.form["random_id"]
         with open(f"./submissions/{random_id}.h", "w", encoding="utf-8") as f:

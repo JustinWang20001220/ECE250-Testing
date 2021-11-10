@@ -1,12 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    
+    <h1>Upload file</h1>
+    <form action="/api/run_test" method="POST" enctype="multipart/form-data" id="upload-form" name="upload-form">
+        <div>
+            <label for="h_file">Select file: </label>
+            <input type="file" id="h_file" name="h_file">
+        </div>
+        
+        
+        <!-- <label>Select file</label>
+        <input type="file" id="h_file">
+        <label for="h_file">Select file...</label>
+        <input id="real_submit" type="submit" value="Submit"> -->
+    </form>
+    <button onclick="validateinput()">Fake Submit</button>
+
+    <h1>Test result</h1>
+    <table id="result_table">
+        <tr>
+        </tr>
+    </table>
 </body>
 </html>
+<script>
+    let x = null;
+
+    function display_result(result) {
+        let table = document.getElementById("result_table")
+        let row = table.insertRow(0)
+        let cell = row.insertCell(0)
+        cell.innerHTML = result.test_result
+    }
+
+    function validateinput() {
+        if (document.getElementById("h_file").value === "") {
+            return;
+        }
+        
+        let myForm = new FormData(document.getElementById("upload-form"));
+        myForm.append("random_id", "11");
+
+
+        fetch("/api/run_test", {
+            body: myForm,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            },  
+            method: "post"
+        }).then((response) => {
+            return response.json();
+            //display_result(response.json());
+        }).then((data) => {
+            display_result(data);
+        })
+
+    }
+</script>
