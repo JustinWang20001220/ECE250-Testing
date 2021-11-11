@@ -33,30 +33,32 @@ def index():
 
 @app.route("/api/run_test", methods=["POST"])
 def run_test():
-    print("running")
     if request.method == "POST":
-        # if "random_id" not in request.form:
-        #     print("id not found")
-        #     return make_response(jsonify(test_result = "Oops"), 200)
+        if "random_id" not in request.form:
+            print("id not found")
+            return make_response(jsonify(test_result = "Oops No id"), 200)
 
-        if "file" not in request.files:
-            print("file not found")
-            return make_response(jsonify(test_result = "Oops No file"), 200)
+        if "h_file" not in request.files:
+            # print(request.files)
+            return make_response(jsonify(test_result = "Oops no file received"), 200)
 
-        h_file = request.files["file"]
+        h_file = request.files["h_file"]
         random_id = request.form["random_id"]
-        with open(f"./submissions/{random_id}.h", "w", encoding="utf-8") as f:
-            f.write(h_file)
+        h_file.save(f"./submissions/{random_id}.h")
 
         # copy uploaded file into testing environment
         subprocess.run(["cp", f"./submissions/{random_id}.h", "./test_space/Search_tree.h"])
         publicate("./test_space/Search_tree.h")
-        
+ 
         # compile the test
         subprocess.run(["g++", "-std=c++11", "./test_space/test.cpp", "-o", f"./test_space/test{random_id}"])   
 
         # run the test and send results back to the client
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
+
+        # delete file
+        subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}"])
+
         return jsonify({"test_result": test.stdout})
 
 

@@ -21,7 +21,7 @@ int main() {
 
 	std::cout << "Front:   " << tree.front()   << std::endl;
 	std::cout << "Back:    " << tree.back()    << std::endl;
-	std::cout << "Height:  " << tree.height()  << " <- this will change for an AVL tree" << std::endl;
+	std::cout << "Height:  " << tree.height()  << " <- this will change for an AVL tree\n";
 
 	std::cout << "--> ";
 

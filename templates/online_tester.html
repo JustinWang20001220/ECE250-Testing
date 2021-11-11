@@ -10,17 +10,11 @@
 
 <body>
     <h1>Upload file</h1>
-    <form action="/api/run_test" method="POST" enctype="multipart/form-data" id="upload-form" name="upload-form">
+    <form action="/api/run_test" method="POST" enctype="multipart/form-data" id="upload-form" name="upload-form"> 
         <div>
             <label for="h_file">Select file: </label>
-            <input type="file" id="h_file" name="h_file">
+            <input type="file" id="h_file" name="h_file" accept=".h">
         </div>
-        
-        
-        <!-- <label>Select file</label>
-        <input type="file" id="h_file">
-        <label for="h_file">Select file...</label>
-        <input id="real_submit" type="submit" value="Submit"> -->
     </form>
     <button onclick="validateinput()">Fake Submit</button>
 
@@ -47,14 +41,12 @@
         }
         
         let myForm = new FormData(document.getElementById("upload-form"));
-        myForm.append("random_id", "11");
 
+        let random_id = Math.floor(Math.random() * 500)
+        myForm.append("random_id", random_id);
 
         fetch("/api/run_test", {
             body: myForm,
-            headers: {
-                "Content-Type": "multipart/form-data"
-            },  
             method: "post"
         }).then((response) => {
             return response.json();
