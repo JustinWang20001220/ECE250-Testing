@@ -57,7 +57,7 @@ def run_test():
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
 
         # delete file
-        subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}"])
+        subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}", "./test_space/Search_tree.h"])
 
         return jsonify({"test_result": test.stdout})
 
