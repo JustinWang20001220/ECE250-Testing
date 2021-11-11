@@ -51,7 +51,7 @@ def run_test():
         publicate("./test_space/Search_tree.h")
  
         # compile the test
-        subprocess.run(["g++", "-std=c++11", "./test_space/test.cpp", "-o", f"./test_space/test{random_id}"])   
+        subprocess.run(["g++", "-std=c++11", "./test_space/test_v1.cpp", "-o", f"./test_space/test{random_id}"])   
 
         # run the test and send results back to the client
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
