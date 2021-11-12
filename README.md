@@ -1,10 +1,10 @@
 <h1>Deployment with Google Cloud</h1>
 From the deployment branch
-'''bash
+```bash
 cd server
 gcloud builds submit --tag gcr.io/ece250-testing-server/ece250-testing-deploy
 cloud run deploy --image gcr.io/ece250-testing-server/ece250-testing-deploy 
-'''
+```
 
 
 <h1> TODO List </h1>
