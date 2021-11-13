@@ -55,11 +55,16 @@ def run_test():
 
         # run the test and send results back to the client
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
+        
+        is_faulty = test.returncode != 0
+
+        # test_result = test.stdout
+        # results = test_result.split("\n")
 
         # delete file
         subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}", "./test_space/Search_tree.h"])
 
-        return jsonify({"test_result": test.stdout})
+        return jsonify({"test_result": test.stdout, "segmentation_fault": is_faulty})
 
 
 def publicate(file_path):
