@@ -1,18 +1,9 @@
-<h1>Deployment with Google Cloud</h1>
-From the deployment branch <br/>
-```bash
-cd server
-gcloud builds submit --tag gcr.io/ece250-testing-server/ece250-testing-deploy
-cloud run deploy --image gcr.io/ece250-testing-server/ece250-testing-deploy 
-```
-
-
 <h1> TODO List </h1>
 <h2> Front End </h2>
 1. online_tester.html: <br/>
 
-    1. Maybe render the html with description of the tests <br/>
-    2. The webpage should be able to make request to the run_test api and display the results on the same page<br/>
+    1. Maybe render the html with description of the tests
+    2. The webpage should be able to make request to the run_test api and display the results on the same page
 2. Front-End Server: React<br/>
 3. Dynamic graphical representation of the structure of tree formed by user's code<br/>
 
@@ -21,4 +12,4 @@ cloud run deploy --image gcr.io/ece250-testing-server/ece250-testing-deploy
 2. tests database: users can upload their tests to the website and share among all users<br/>
 3. test choosing: users can choose any tests from the database for their own testing<br/>
 4. tests rating: users can rate tests after running them<br/>
-5. 
+5. graphical debugger
