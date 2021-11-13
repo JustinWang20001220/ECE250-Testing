@@ -54,7 +54,7 @@ def run_test():
         compile = subprocess.run(["g++", "-std=c++11", "./test_space/test_v1.cpp", "-o", f"./test_space/test{random_id}"])   
         if compile.returncode != 0:
             subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/Search_tree.h"])
-            return jsonify({"test_result": ["cannot compile"], "segmentation_fault": False})
+            return jsonify({"test_result": "cannot compile\n", "segmentation_fault": False})
 
         # run the test and send results back to the client
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
