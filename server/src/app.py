@@ -1,6 +1,7 @@
 # from flask_restful import Api
 from flask import Flask, request, render_template, jsonify, make_response
-import subprocess, re, os
+import subprocess
+import re, os
 # from flask_cors import CORS
 # from flask_session import Session
 # from routes import Upload, Report
@@ -50,15 +51,23 @@ def run_test():
         publicate("./test_space/Search_tree.h")
  
         # compile the test
-        subprocess.run(["g++", "-std=c++11", "./test_space/test_v1.cpp", "-o", f"./test_space/test{random_id}"])   
+        compile = subprocess.run(["g++", "-std=c++11", "./test_space/test_v1.cpp", "-o", f"./test_space/test{random_id}"])   
+        if compile.returncode != 0:
+            subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/Search_tree.h"])
+            return jsonify({"test_result": "cannot compile\n", "segmentation_fault": False})
 
         # run the test and send results back to the client
         test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
+        
+        is_faulty = test.returncode != 0
+
+        # test_result = test.stdout
+        # results = test_result.split("\n")
 
         # delete file
         subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}", "./test_space/Search_tree.h"])
 
-        return jsonify({"test_result": test.stdout})
+        return jsonify({"test_result": test.stdout, "segmentation_fault": is_faulty})
 
 
 def publicate(file_path):

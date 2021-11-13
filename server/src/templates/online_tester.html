@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,30 +10,68 @@
 </head>
 
 <body>
-    <h1>Upload file</h1>
-    <form action="/api/run_test" method="POST" enctype="multipart/form-data" id="upload-form" name="upload-form"> 
+    <div style="margin: 25px;">
+        <h1 style="text-align: center">ECE250 Project3</h1>
         <div>
-            <label for="h_file">Select file: </label>
-            <input type="file" id="h_file" name="h_file" accept=".h">
-        </div>
-    </form>
-    <button onclick="validateinput()">Fake Submit</button>
+            <form style="display: inline-block;" action="/api/run_test" method="POST" enctype="multipart/form-data" id="upload-form" name="upload-form"> 
+                <div>
+                    <label for="h_file"></label>
+                    <input type="file" id="h_file" name="h_file" accept=".h">
+                </div>
+                <!-- <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="h_file" name="h_file" accept=".h" required>
+                    <label class="custom-file-label" for="h_file">Choose file...</label>
+                    <div class="invalid-feedback">Invalid File</div>
+                </div> -->
 
-    <h1>Test result</h1>
-    <table id="result_table">
-        <tr>
-        </tr>
-    </table>
+                <!-- <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="validatedCustomFile" required>
+                    <label class="custom-file-label" for="validatedCustomFile">Choose file...</label>
+                    <div class="invalid-feedback">Example invalid custom file feedback</div>
+                </div> -->
+            </form>
+            <button style="display: inline-block; float: right;" type="button" class="btn btn-light" onclick="validateinput()">Submit</button>
+        </div>
+        <div>
+    
+            <table class="table" id="result_table">
+                <thead>
+                    <th scope="col">Test Number</th>
+                    <th scope="col">Test Result</th>
+                </thead>
+                <tbody id="result_table_tbody">
+                    <tr>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 <script>
     let x = null;
+    let test_result = {};
 
-    function display_result(result) {
-        let table = document.getElementById("result_table")
-        let row = table.insertRow(0)
-        let cell = row.insertCell(0)
-        cell.innerHTML = result.test_result
+    function processdata(data) {
+        let result_list = data.test_result.split(/\r?\n/)
+        return result_list
+    }
+
+    function display_result(result_list) {
+        for (let i = 0; i < result_list.length - 1; i++) {
+            let new_tr = document.createElement('tr');
+            let new_th = document.createElement('th');
+            let new_td = document.createElement('td');
+            new_th.setAttribute("scope","row");
+            new_th.innerHTML = i;
+            new_td.innerHTML = result_list[i];
+            new_tr.appendChild(new_th);
+            new_tr.appendChild(new_td);
+            let parent = document.getElementById("result_table_tbody");
+            parent.appendChild(new_tr);
+        }
     }
 
     function validateinput() {
@@ -52,8 +91,7 @@
             return response.json();
             //display_result(response.json());
         }).then((data) => {
-            display_result(data);
+            display_result(processdata(data));
         })
-
     }
 </script>
