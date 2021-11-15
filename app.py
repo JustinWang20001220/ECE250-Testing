@@ -57,9 +57,12 @@ def run_test():
             return jsonify({"test_result": "cannot compile\n", "segmentation_fault": False})
 
         # run the test and send results back to the client
-        test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True)
-        
+        try:
+            test = subprocess.run(f"./test_space/test{random_id}", stdout=subprocess.PIPE, text=True, timeout=20)
+        except subprocess.TimeoutExpired:
+            result = "Test ran too long. Your program may have entered an infinite loop.\n"
         is_faulty = test.returncode != 0
+        result = test.stdout
 
         # test_result = test.stdout
         # results = test_result.split("\n")
@@ -67,7 +70,7 @@ def run_test():
         # delete file
         subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}", "./test_space/Search_tree.h"])
 
-        return jsonify({"test_result": test.stdout, "segmentation_fault": is_faulty})
+        return jsonify({"test_result": result, "segmentation_fault": is_faulty})
 
 
 def publicate(file_path):
