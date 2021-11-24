@@ -1,7 +1,12 @@
 # from flask_restful import Api
+import os
 from flask import Flask, request, render_template, jsonify, make_response
 import subprocess
 import re, fileinput
+
+from sqlalchemy.orm.session import sessionmaker
+from sqlalchemy import text
+from database import Base, engine, Projects, Tests, TestFiles
 # from flask_cors import CORS
 # from flask_session import Session
 # from routes import Upload, Report
@@ -22,6 +27,11 @@ import re, fileinput
 
 
 app = Flask(__name__)
+app.config["TESTING_DIR"] = "./test_space"
+
+Base.metadata.create_all(engine)
+DB_Session = sessionmaker(bind=engine)
+db_session = DB_Session()
 
 
 @app.route("/")
@@ -72,6 +82,49 @@ def run_test():
 
         return jsonify({"test_result": result, "segmentation_fault": is_faulty})
 
+
+# # Api that returns the available project id's
+# @app.route("api/get_projects", method=["GET"])
+# def get_projects():
+#     pass
+
+
+# Api that takes in project_id and returns the tests (name + id)
+@app.route("/api/get_all_tests", method=["GET"])
+def get_all_tests():
+    pass
+
+# Api: live search for test names
+@app.route("api/search_test", method=["POST", "GET"])
+def search_test():
+    input = request.form.get("text")
+    similar_tests = db_session.query(Tests).filter(Tests.test_name.ilike("%" + input + "%")).all()
+
+    # sql = f"SELECT * FROM tests WHERE test_name LIKE '%{input}%'"
+    # similar_tests = db_session.execute(text(sql)).fetchall()
+
+    return jsonify([{test.test_name : test.id} for test in similar_tests])
+
+
+
+# Api that takes one parameters: test_id
+# input form: 
+@app.route("/api/run_selected", method=["POST"])
+def run_selected():
+    files = request.files.getlist("file")
+    for file in files:
+        file.save(os.path.join(app.config["TESTING_DIR"], file.filename))
+    
+    # Create testing files from the database
+    test_id = request.form.get("test_id")
+    test_files = db_session.query(TestFiles).filter(TestFiles.test_id == test_id).all()
+    for test_file in test_files:
+        with open(os.join(app.config["TESTING_DIR"], test_file.filename), "w") as f:
+            f.write(test_file.file_content)
+
+    # Run the test
+    test = db_session.query(Tests).filter(Tests.id == test_id).first()
+    subprocess.run(eval(test.command)) 
 
 def publicate(file_path):
     file = open(file_path, "r")
