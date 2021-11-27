@@ -92,7 +92,9 @@ def run_test():
 # Api that takes in project_id and returns the tests (name + id)
 @app.route("/api/get_all_tests", method=["GET"])
 def get_all_tests():
-    pass
+    tests = db_session.query(Tests).all()
+    return jsonify([{test.test_name : test.id} for test in tests])
+
 
 # Api: live search for test names
 @app.route("api/search_test", method=["POST", "GET"])
@@ -106,7 +108,6 @@ def search_test():
     return jsonify([{test.test_name : test.id} for test in similar_tests])
 
 
-
 # Api that takes one parameters: test_id
 # input form: 
 @app.route("/api/run_selected", method=["POST"])
@@ -114,6 +115,14 @@ def run_selected():
     files = request.files.getlist("file")
     for file in files:
         file.save(os.path.join(app.config["TESTING_DIR"], file.filename))
+
+    # Replace the original output filename with "out.txt"
+    with open(os.join(app.config["TESTING_DIR"], "main.cpp"), "r") as f:
+        text = f.read()
+    of_name = re.search(r"ofstream(.*?)\(").group(1)
+    text = re.sub(r"ofstream(.*);", f"ofstream{of_name}(out.txt)", text)
+    with open(os.join(app.config["TESTING_DIR"], "main.cpp"), "w") as f:
+        f.write(text)
     
     # Create testing files from the database
     test_id = request.form.get("test_id")
@@ -124,7 +133,18 @@ def run_selected():
 
     # Run the test
     test = db_session.query(Tests).filter(Tests.id == test_id).first()
-    subprocess.run(eval(test.command)) 
+    # Command: 
+    # python3 test_maker.py; g++ -std=c++11 main.cpp; ./a.out python_test.txt; python3 test_verifier.py > log.txt
+    test_process = subprocess.run(test.command, shell=True)
+    if test_process.returncode != 0:
+        return jsonify({"test_result": "Something went wrong, please check if your program can be compiled"})
+    with open(os.join(app.config["TESTING_DIR"], "log.txt"), "r") as f:
+        test_result = f.read()
+        return jsonify({"test_result": test_result})
+
+
+    
+
 
 def publicate(file_path):
     file = open(file_path, "r")
