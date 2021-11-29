@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { useCallback } from 'react'
 
-const url = 'https://localhost:1453/api/search_test?string='
+const url = '/api/search_test/'
 const AppContext = React.createContext()
 
 const AppProvider = ({ children }) => {
@@ -12,6 +12,8 @@ const AppProvider = ({ children }) => {
   const fetchTests = useCallback( async () => {
     setLoading(true)
     try {
+      const api = `${url}${searchTerm}`
+      console.log(api)
       const response = await fetch(`${url}${searchTerm}`)
       const data = await response.json()
       console.log(data);
@@ -33,9 +35,7 @@ const AppProvider = ({ children }) => {
     fetchTests()
   }, [searchTerm,fetchTests])
   return (
-    <AppContext.Provider
-      value={{ loading, tests, searchTerm, setSearchTerm }}
-    >
+    <AppContext.Provider value={{ loading, tests, searchTerm, setSearchTerm }}>
       {children}
     </AppContext.Provider>
   )

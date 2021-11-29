@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // import pages
 import Home from "./pages/Home";
 import About from "./pages/About";
-import SingleCocktail from "./pages/SingleCocktail";
+// import SingleCocktail from "./pages/SingleCocktail";
 import SingleTest from "./pages/SingleTest";
 import Error from "./pages/Error";
 // import components
@@ -12,10 +12,11 @@ import Navbar from "./components/Navbar";
 import io from "socket.io-client"
 
 let sid = null
-const socket = io.connect("http://localhost:1453")
+const socket = io.connect("/")
 
 socket.on("connected", (data) => {
   sid = data.sid
+  console.log(`sid: ${sid}`)
 })
 
 function App() {
@@ -29,10 +30,10 @@ function App() {
         <Route path="/about">
           <About />
         </Route>
-        <Route path="/cocktail/:testId">
+        {/* <Route path="/cocktail/:testId">
           <SingleCocktail socket={socket} />
-        </Route>
-        <Route path="/test/:testId">
+        </Route> */}
+        <Route path="/test/:testName/:testId">
           <SingleTest socket={socket} sid={sid} />
         </Route>
         <Route path="*">

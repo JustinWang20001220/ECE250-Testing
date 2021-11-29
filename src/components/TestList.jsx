@@ -1,9 +1,9 @@
 import React from 'react'
-import Cocktail from './Cocktail'
+import Test from './Test'
 import Loading from './Loading'
 import { useGlobalContext } from '../context'
 
-export default function CocktailList() {
+export default function TestlList() {
   const { tests, loading } = useGlobalContext()
   if (loading) {
     return <Loading/>
@@ -20,7 +20,7 @@ export default function CocktailList() {
       <h2 className='section-title'>tests</h2>
       <div className='cocktails-center'>
         {tests.map((item) => {
-          return <Cocktail key={item.test_id} {...item} />
+          return <Test key={item.test_id} {...item} />
         })}
       </div>
     </section>

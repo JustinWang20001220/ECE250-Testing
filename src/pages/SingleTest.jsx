@@ -5,8 +5,8 @@ import { useParams, Link } from 'react-router-dom'
 
 
 export default function SingleTest({socket, sid}) {
-    const {testId} = useParams()
-    const [loading, setLoading] = useState(null)
+    const {testName, testId} = useParams()
+    const [loading, setLoading] = useState({isLoading: false, message: ""})
     const [test, setTest] = useState({
         testId: 0,
         testName: "No Test",
@@ -22,7 +22,7 @@ export default function SingleTest({socket, sid}) {
         
         const newTest = {
             testId: testId,
-            testName: this.props.location.testName,
+            testName: testName,
             testResult: testResult
         }
         setTest(newTest)
@@ -50,9 +50,8 @@ export default function SingleTest({socket, sid}) {
     }
     
     if (loading.isLoading) {
-        return <Loading message={loading.message}/>
+        return <Loading/>
     }
-    //asdf
 
     if (!test) {
         return <h2 className='section-title'>no test to display</h2>
@@ -64,7 +63,17 @@ export default function SingleTest({socket, sid}) {
                     back home
                 </Link>
                 <h2 className='section-title'>{testName}</h2>
+
                 {/* Form to submit files */}
+                <form enctype="multipart/form-data" id="upload-form" name="upload-form"> 
+                    <div>
+                        <label for="h_file"></label>
+                        <input type="file" id="h_file" name="h_file" accept=".h" multiple/>
+                    </div>
+                    <button type="button" onclick="onSubmit()">Submit</button>
+                </form>
+
+
                 <p>
                     <span className='drink-data'>Test Result :</span> {testResult}
                 </p>

@@ -6,7 +6,8 @@ export default function Navbar() {
     <nav className='navbar'>
       <div className='nav-center'>
         <Link to='/'>
-          <img src={logo} alt='cocktail db logo' className='logo' />
+          {/* <img src={logo} alt='cocktail db logo' className='logo' /> */}
+          ECE250-Testing
         </Link>
         <ul className='nav-links'>
           <li>

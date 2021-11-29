@@ -1,11 +1,11 @@
 import React from 'react'
-import CocktailList from '../components/CocktailList'
+import TestList from '../components/TestList'
 import SearchForm from '../components/SearchForm'
 export default function Home() {
   return (
     <main>
       <SearchForm />
-      <CocktailList />
+      <TestList />
     </main>
   )
 }

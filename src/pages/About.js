@@ -6,7 +6,7 @@ export default function About() {
       <h1 className="section-title">about us</h1>
       <p>
         This is a testing website that help ECE students 
-        to test their code and give useful result
+        to test their code and give useful results
       </p>
     </section>
   );

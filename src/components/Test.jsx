@@ -2,11 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 
-export default function Cocktail({ test_id, test_name }) {
-  const toSingleTest = {
-    pathname: `/cocktail/${test_id}`,
-    testName: test_name
-  }
+export default function Test({ test_id, test_name }) {
   
   return (
     <article className='cocktail'>
@@ -17,7 +13,7 @@ export default function Cocktail({ test_id, test_name }) {
         <h3>{test_name}</h3>
         {/* <h4>{glass}</h4> */}
         {/* <p>{info}</p> */}
-        <Link to={toSingleTest} className='btn btn-primary btn-details'>
+        <Link to={`/test/${test_name}/${test_id}`} className='btn btn-primary btn-details'>
           Enter
         </Link>
       </div>
