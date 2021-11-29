@@ -6,7 +6,7 @@ import { useParams, Link } from 'react-router-dom'
 
 export default function SingleTest({socket, sid}) {
     const {testId} = useParams()
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(null)
     const [test, setTest] = useState({
         testId: 0,
         testName: "No Test",
@@ -14,10 +14,10 @@ export default function SingleTest({socket, sid}) {
     })
 
     useEffect(() => {
-        let testResult = []
+        let testResult = "none"
         socket.on("completed", (data) => {
             testResult = data.test_result
-            setLoading(false)
+            setLoading({isLoading: false, message: ""})
         })
         
         const newTest = {
@@ -45,12 +45,12 @@ export default function SingleTest({socket, sid}) {
         }).then((response) => {
             return response.json();
         }).then((data) => {
-            setLoading(true)
+            setLoading({isLoading: true, message: data.msg})
         })
     }
     
-    if (loading) {
-        return <Loading />
+    if (loading.isLoading) {
+        return <Loading message={loading.message}/>
     }
 
     if (!test) {
