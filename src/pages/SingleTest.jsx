@@ -52,6 +52,7 @@ export default function SingleTest({socket, sid}) {
     if (loading.isLoading) {
         return <Loading message={loading.message}/>
     }
+    //asdf
 
     if (!test) {
         return <h2 className='section-title'>no test to display</h2>
