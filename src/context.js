@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { useCallback } from 'react'
 
-const url = 'https://www.thecocktaildb.com/api/json/v1/1/search.php?s='
+const url = 'https://localhost:1453/api/search_test?string='
 const AppContext = React.createContext()
 
 const AppProvider = ({ children }) => {
@@ -16,29 +16,13 @@ const AppProvider = ({ children }) => {
       const data = await response.json()
       console.log(data);
       const { new_tests } = data
-      // if (tests) {
-      //   const newCocktails = tests.map((item) => {
-      //     const {
-      //       idDrink,
-      //       strDrink,
-      //       strDrinkThumb,
-      //       strAlcoholic,
-      //       strGlass,
-      //     } = item
 
-      //     return {
-      //       id: idDrink,
-      //       name: strDrink,
-      //       image: strDrinkThumb,
-      //       info: strAlcoholic,
-      //       glass: strGlass,
-      //     }
-      //   })
-      //   setCocktails(newCocktails)
-      // } else {
-      //   setCocktails([])
-      // }
-      setTests(new_tests)
+      if (new_tests) {
+        setTests(new_tests)
+      } else {
+        setTests([])
+      }
+      
       setLoading(false)
     } catch (error) {
       console.log(error)

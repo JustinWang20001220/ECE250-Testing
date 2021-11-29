@@ -2,8 +2,9 @@ import React from 'react'
 import Loading from '../components/Loading'
 import { useParams, Link } from 'react-router-dom'
 
-export default function SingleCocktail() {
-  const { id } = useParams()
+
+export default function SingleCocktail({socket}) {
+  const { testId } = useParams()
   const [loading, setLoading] = React.useState(false)
   const [cocktail, setCocktail] = React.useState(null)
 
@@ -11,9 +12,10 @@ export default function SingleCocktail() {
     setLoading(true)
     async function getCocktail() {
       try {
-        const response = await fetch(
-          `https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`
-        )
+
+        // const response = await fetch(
+        //   `https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`
+        // )
         const data = await response.json()
         if (data.drinks) {
           const {
@@ -55,7 +57,7 @@ export default function SingleCocktail() {
       setLoading(false)
     }
     getCocktail()
-  }, [id])
+  }, [testId])
   if (loading) {
     return <Loading/>
   }
@@ -71,7 +73,13 @@ export default function SingleCocktail() {
       instructions,
       ingredients,
     } = cocktail
+
+    socket.on("completed", (data) => {
+      console.log(data.test_result)
+    })
+
     return (
+      // Add form to submit multiple files
       <section className='section cocktail-section'>
         <Link to='/' className='btn btn-primary'>
           back home
