@@ -5,6 +5,7 @@
     1. Maybe render the html with description of the tests
     2. The webpage should be able to make request to the run_test api and display the results on the same page
 2. Front-End Server: React<br/>
+3. Socketio with React: client needs to connect to server before submitting each test, then disconnect when test is completed<br/>
 3. Dynamic graphical representation of the structure of tree formed by user's code<br/>
 
 <h2> Back End </h2>

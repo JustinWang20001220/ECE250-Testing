@@ -1,37 +1,31 @@
 # from flask_restful import Api
-import os
+import time
+import os, subprocess, re, threading
+import queue
 from flask import Flask, request, render_template, jsonify, make_response
-import subprocess
-import re, fileinput
+from flask_socketio import SocketIO, emit
 
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy import text
+
 from database import Base, engine, Projects, Tests, TestFiles
-# from flask_cors import CORS
-# from flask_session import Session
-# from routes import Upload, Report
-
-# class FlaskApp:
-#     def __init__(self):
-#         self.app = Flask(__name__)
-#         # CORS(self.app)
-#         # Session(self.app)
-#         self.api = Api(self.app, prefix="/api/v0.0")
-    
-#     def runserver(self, **kwargs):
-#         self.app.run(**kwargs)
-
-#     def register_route(self):
-#         self.api.add_resource(Upload, "/upload")
-#         self.api.add_resource(Report, "/report")
-
+from utils import publicate
 
 app = Flask(__name__)
 app.config["TESTING_DIR"] = "./test_space"
+app.config["BASE_DIR"] = "./test_space"
+
+socketio = SocketIO(app, cors_allowed_origins="*")
+clients = []
+
+test_queue = queue.Queue(maxsize=10)
+lock = threading.Lock()
 
 Base.metadata.create_all(engine)
 DB_Session = sessionmaker(bind=engine)
 db_session = DB_Session()
+
+dir_id = 0
 
 
 @app.route("/")
@@ -90,27 +84,32 @@ def run_test():
 
 
 # Api that takes in project_id and returns the tests (name + id)
-@app.route("/api/get_all_tests", method=["GET"])
+@app.route("/api/get_all_tests", methods=["GET"])
 def get_all_tests():
     tests = db_session.query(Tests).all()
-    return jsonify([{test.test_name : test.id} for test in tests])
+    return jsonify({
+        "new_tests": [ {"test_id": test.id, "test_name": test.test_name} for test in tests]
+    })
 
 
 # Api: live search for test names
-@app.route("api/search_test", method=["POST", "GET"])
-def search_test():
-    input = request.form.get("text")
-    similar_tests = db_session.query(Tests).filter(Tests.test_name.ilike("%" + input + "%")).all()
-
+@app.route("/api/search_test/<string>", methods=["POST", "GET"])
+def search_test(string):
+    print(f"Searching {string}\n")
+    similar_tests = db_session.query(Tests).filter(Tests.test_name.ilike("%" + string + "%")).all()
+    for test in similar_tests:
+        print(test.test_name)
     # sql = f"SELECT * FROM tests WHERE test_name LIKE '%{input}%'"
     # similar_tests = db_session.execute(text(sql)).fetchall()
 
-    return jsonify([{test.test_name : test.id} for test in similar_tests])
+    return jsonify({
+        "new_tests" : [ {"test_id": test.id, "test_name": test.test_name} for test in similar_tests]
+    })
 
 
 # Api that takes one parameters: test_id
 # input form: 
-@app.route("/api/run_selected", method=["POST"])
+@app.route("/api/run_selected", methods=["POST"])
 def run_selected():
     files = request.files.getlist("file")
     for file in files:
@@ -143,22 +142,96 @@ def run_selected():
         return jsonify({"test_result": test_result})
 
 
+
+
+
+# Nonblocking Api workflow:
+# 1. Create a folder and save all uploads into the folder
+# 2. Stores all testing files from the database into the folder
+# 3. Pushes the (folder name, sid) tuple into a queue, which is to be handled by a dedicated testing thread
+# 4. Testing thread pops a tuple and finishes the corresponding test
+# 5. Testing thread emits the test logs to the client with sid=sid
+@app.route("/api/project4_submit_test", methods=["POST"])
+def submit_test():
+    files = request.files.getlist("file")
+    test_id = request.form.get("test_id")
+    sid = request.form.get("sid")
     
+    global dir_id
+    dir_id = (dir_id + 1)%100
+    dirname = os.path.join(app.config["BASE_DIR"], f"/{dir_id}")
+
+    for file in files:
+        file.save(os.path.join(dirname, file.filename))
+    # Replace the original output filename with "out.txt"
+    with open(os.join(dirname, "main.cpp"), "r") as f:
+        text = f.read()
+    of_name = re.search(r"ofstream(.*?)\(").group(1)
+    text = re.sub(r"ofstream(.*);", f"ofstream{of_name}(out.txt)", text)
+    with open(os.join(dirname, "main.cpp"), "w") as f:
+        f.write(text)
+
+    # Create testing files from the database
+    test_id = request.form.get("test_id")
+    test_files = db_session.query(TestFiles).filter(TestFiles.test_id == test_id).all()
+    for test_file in test_files:
+        with open(os.join(dirname, test_file.filename), "w") as f:
+            f.write(test_file.file_content)
+
+    # Push the tuple (sid, dirname, test_id) onto the queue
+    lock.acquire()
+    test_queue.put((sid, dirname, test_id))
+    lock.release()
+    return jsonify({"msg": "Test is waiting for execution"}), 202
 
 
-def publicate(file_path):
-    file = open(file_path, "r")
-    text = file.read()
-    file.close()
+# Initialize the connection and echo back the corresponding session id
+@socketio.on("connect")
+def connect():
+    print(f"sid: {request.sid}")
+    clients.append(request.sid)
+    emit("connected", {"sid": request.sid}, room=request.sid)
 
-    text = re.sub("private", "public", text)
 
-    file = open(file_path, "w")
-    file.write(text)
-    file.close()
+@socketio.on("disconnect")
+def disconnect():
+    clients.remove(request.sid)
+    print(f"Client {request.sid} disconnected")
 
+def tester():
+    while(True):
+        if test_queue.empty():
+            time.sleep(0.1)
+            continue
+        
+        lock.acquire
+        task = test_queue.get() # (sid, dirname, test_id)
+        print(f"task: {task}\n")
+        lock.release()
+
+        # run the test
+        client_sid, dirname, test_id = task
+        test = db_session.query(Tests).filter(Tests.id == test_id).first()
+        test_process = subprocess.run(test.command, shell=True)
+
+        # Echo results back to client
+        if test_process.returncode != 0:
+            emit("completed", {
+                "test_result": "Something went wrong, please check if your program can be compiled"
+            }, room=client_sid)
+            continue
+
+        with open(os.join(dirname, "log.txt"), "r") as f:
+            test_result = f.read()
+            emit("completed", {
+                "test_result": test_result
+            }, room=client_sid)
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 1453)
+    tester_thread = threading.Thread(target=tester)
+    socketio.run(app, "localhost", 1453)
+    # app.run("0.0.0.0", 1453)
+    # tester_thread.start()
+
 
