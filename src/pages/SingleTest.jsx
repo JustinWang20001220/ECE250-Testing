@@ -3,10 +3,11 @@ import Loading from '../components/Loading'
 import { useGlobalContext } from '../context'
 import { useParams, Link } from 'react-router-dom'
 
-
-export default function SingleTest({socket, sid}) {
-    const {testName, testId} = useParams()
+export default function SingleTest() {
+    const { testName, testId } = useParams()
+    const [randomId, setRandomId] = useState(0)
     const [loading, setLoading] = useState({isLoading: false, message: ""})
+    const [submitTest, setSubmitTest] = useState(false)
     const [test, setTest] = useState({
         testId: 0,
         testName: "No Test",
@@ -14,38 +15,94 @@ export default function SingleTest({socket, sid}) {
     })
 
     useEffect(() => {
-        let testResult = "none"
-        socket.on("completed", (data) => {
-            testResult = data.test_result
-            setLoading({isLoading: false, message: ""})
-        })
-        
         const newTest = {
             testId: testId,
             testName: testName,
-            testResult: testResult
+            testResult: "none"
         }
         setTest(newTest)
 
-    }, [testId, socket])
+    }, [testId])
 
-    // TODO
-    function onSubmit(test_id) {
-        if (document.getElementById("h_file").value === "") {
-            return
-        }
 
-        let myForm = new FormData(document.getElementById("upload-form"))
-        myForm.append("test_id", test_id)
-        myForm.append("sid", sid)
+    useEffect(() => {
+        const periodicFetch = setInterval(() => {
+            fetch(`/api/get_result/${randomId}`, {
+                method: "get"
+            }).then((res) => {
+                if (res.status !== 200) {
+                    return;
+                }
+                res.json().then((data) => {
+                    setLoading({
+                        isLoading: false,
+                        message: ""
+                    })
+                    setTest({
+                        testId: testId,
+                        testName: testName,
+                        testResult: data.test_result
+                    })
+                    // clearInterval(periodicFetch)
+                })
+            }).catch((err) => {
+                console.log("Fetch Error :-S", err);
+            });
+        }, 500);
+      
+        return () => clearInterval(periodicFetch);  
+    }, [])
 
-        fetch("/api/run_test", {
+    // useEffect(() => {
+    //     const periodicFetch = setInterval(() => {
+    //         fetch(`/api/get_result/${randomId}`, {
+    //             method: "get"
+    //         }).then((res) => {
+    //             if (res.status !== 200) {
+    //                 return;
+    //             }
+    //             res.json().then((data) => {
+    //                 setLoading({
+    //                     isLoading: false,
+    //                     message: ""
+    //                 })
+    //                 setTest({
+    //                     testId: testId,
+    //                     testName: testName,
+    //                     testResult: data.test_result
+    //                 })
+    //                 clearInterval(periodicFetch)
+    //             })
+    //         }).catch((err) => {
+    //             console.log("Fetch Error :-S", err);
+    //         });
+    //     }, 500);
+      
+    //     return () => clearInterval(periodicFetch);  
+    // }, [submitTest])
+
+    function handleSubmit(event) {
+        event.preventDefault()
+
+        const newId = Math.floor(Math.random() * 10000)
+        setRandomId(newId)
+
+        let myForm = new FormData(event.target)
+        myForm.append("test_id", testId)
+        myForm.append("client_id", randomId)
+
+        setLoading({isLoading: true, message: ""})
+        setSubmitTest(true)
+        fetch("/api/project4_submit_test", {
             body: myForm,
             method: "post"
         }).then((response) => {
             return response.json();
         }).then((data) => {
             setLoading({isLoading: true, message: data.msg})
+        }).catch((e) => {
+            setSubmitTest(false)
+            setLoading({isLoading: false, message: ""})
         })
     }
     
@@ -58,21 +115,28 @@ export default function SingleTest({socket, sid}) {
     } else {
         const { testName, testResult } = test
         return (
-            <section className='setction cocktail-section'>
+            <section className='section cocktail-section'>
                 <Link to='/' className='btn btn-primary'>
                     back home
                 </Link>
                 <h2 className='section-title'>{testName}</h2>
 
-                {/* Form to submit files */}
-                <form enctype="multipart/form-data" id="upload-form" name="upload-form"> 
-                    <div>
-                        <label for="h_file"></label>
-                        <input type="file" id="h_file" name="h_file" accept=".h" multiple/>
-                    </div>
-                    <button type="button" onclick="onSubmit()">Submit</button>
+                <form onSubmit={handleSubmit}>
+                    <input type="file" id="file" multiple name="file" />
+                    <br />
+                    <button type="submit" className="btn">Upload Test Files</button>
                 </form>
 
+
+                {/* Form to submit files */}
+                {/* <form enctype="multipart/form-data" id="upload-form" name="upload-form" className='formsubmit'>  */}
+                    {/* <div> */}
+                        {/* <label for="h_file">Choose File</label> */}
+                        {/* <input type="file" id="h_file" name="h_file" accept=".h" multiple/> */}
+                    {/* </div> */}
+                    {/* <button type="button" onclick="onSubmit()">Submit</button> */}
+                {/* </form> */}
+                
 
                 <p>
                     <span className='drink-data'>Test Result :</span> {testResult}

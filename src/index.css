@@ -303,6 +303,20 @@ Form
   padding: 0.5rem;
   font-size: 1.2rem;
 }
+
+.formsubmit {
+  width: 400px;
+  margin: auto;
+  border: 5px solid rgb(112, 110, 110);
+  padding: 10px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.formsubmit div{
+  margin-left: 100px;
+}
 /* 
 ====== 
 Cocktail

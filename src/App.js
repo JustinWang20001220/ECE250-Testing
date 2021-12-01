@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // import pages
 import Home from "./pages/Home";
@@ -8,16 +8,15 @@ import SingleTest from "./pages/SingleTest";
 import Error from "./pages/Error";
 // import components
 import Navbar from "./components/Navbar";
-
 import io from "socket.io-client"
 
-let sid = null
-const socket = io.connect("/")
+// let sid = ""
 
-socket.on("connected", (data) => {
-  sid = data.sid
-  console.log(`sid: ${sid}`)
-})
+// const socket = io.connect("/")
+
+// socket.on("connected", (data) => {
+//   sid = data.sid
+// })
 
 function App() {
   return (
@@ -30,11 +29,8 @@ function App() {
         <Route path="/about">
           <About />
         </Route>
-        {/* <Route path="/cocktail/:testId">
-          <SingleCocktail socket={socket} />
-        </Route> */}
         <Route path="/test/:testName/:testId">
-          <SingleTest socket={socket} sid={sid} />
+          <SingleTest />
         </Route>
         <Route path="*">
           <Error />

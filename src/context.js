@@ -1,22 +1,24 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { useCallback } from 'react'
+// import io from "socket.io-client"
 
 const url = '/api/search_test/'
 const AppContext = React.createContext()
 
 const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('a')
+  const [searchTerm, setSearchTerm] = useState('test')
   const [tests, setTests] = useState([])
+  // const [sid, setSid] = useState("")
 
   const fetchTests = useCallback( async () => {
     setLoading(true)
     try {
       const api = `${url}${searchTerm}`
-      console.log(api)
+      // console.log(api)
       const response = await fetch(`${url}${searchTerm}`)
       const data = await response.json()
-      console.log(data);
+      // console.log(data);
       const { new_tests } = data
 
       if (new_tests) {
@@ -31,9 +33,18 @@ const AppProvider = ({ children }) => {
       setLoading(false)
     }
   },[searchTerm])
+
   useEffect(() => {
     fetchTests()
-  }, [searchTerm,fetchTests])
+  }, [searchTerm, fetchTests])
+
+  // const socket = io.connect("/")
+  // useEffect(() => {
+  //   socket.on("connected", (data) => {
+  //     setSid(data.sid)
+  //   })
+  // }, [socket])
+
   return (
     <AppContext.Provider value={{ loading, tests, searchTerm, setSearchTerm }}>
       {children}
