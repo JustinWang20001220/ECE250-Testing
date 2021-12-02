@@ -3,22 +3,19 @@ import time
 import os, subprocess, re, threading
 import queue
 from flask import Flask, request, render_template, jsonify, make_response
-from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy import text
+# from sqlalchemy import text
 
 from database import Base, engine, Projects, Tests, TestFiles
 from utils import publicate
 
 app = Flask(__name__)
-app.config["TESTING_DIR"] = "./test_space"
-app.config["BASE_DIR"] = "./test_space"
+CORS(app)
 
-socketio = SocketIO(app, cors_allowed_origins="*")
-clients = []
-
-test_queue = queue.Queue(maxsize=10)
+test_queue = queue.Queue()
+results = {}
 lock = threading.Lock()
 
 Base.metadata.create_all(engine)
@@ -28,12 +25,12 @@ db_session = DB_Session()
 dir_id = 0
 
 
-@app.route("/")
-def index():
-    # Maybe render the html with description of the tests.
-    # The webpage should be able to make request to the run_test api
-    # and display the results on the same page
-    return render_template("online_tester.html")
+# @app.route("/")
+# def index():
+#     # Maybe render the html with description of the tests.
+#     # The webpage should be able to make request to the run_test api
+#     # and display the results on the same page
+#     return render_template("online_tester.html")
 
 @app.route("/api/run_test", methods=["POST"])
 def run_test():
@@ -67,9 +64,6 @@ def run_test():
             result = "Test ran too long. Your program may have entered an infinite loop.\n"
         is_faulty = test.returncode != 0
         result = test.stdout
-
-        # test_result = test.stdout
-        # results = test_result.split("\n")
 
         # delete file
         subprocess.run(["rm", "-f", f"./submissions/{random_id}.h", f"./test_space/test{random_id}", "./test_space/Search_tree.h"])
@@ -133,15 +127,14 @@ def run_selected():
     # Run the test
     test = db_session.query(Tests).filter(Tests.id == test_id).first()
     # Command: 
-    # python3 test_maker.py; g++ -std=c++11 main.cpp; ./a.out python_test.txt; python3 test_verifier.py > log.txt
+    # cd {}; python3 test_maker.py; g++ -std=c++11 Project4_main.cpp; ./a.out python_test.txt; python3 test_verifier.py > log.txt
+    # python3 test_maker.py; g++ -std=c++11 Project4_main.cpp; ./a.out python_test.txt; python3 test_verifier.py > log.txt
     test_process = subprocess.run(test.command, shell=True)
     if test_process.returncode != 0:
         return jsonify({"test_result": "Something went wrong, please check if your program can be compiled"})
     with open(os.join(app.config["TESTING_DIR"], "log.txt"), "r") as f:
         test_result = f.read()
         return jsonify({"test_result": test_result})
-
-
 
 
 
@@ -155,83 +148,98 @@ def run_selected():
 def submit_test():
     files = request.files.getlist("file")
     test_id = request.form.get("test_id")
-    sid = request.form.get("sid")
+    client_id = request.form.get("client_id")
     
     global dir_id
     dir_id = (dir_id + 1)%100
-    dirname = os.path.join(app.config["BASE_DIR"], f"/{dir_id}")
+    dirname = f"./test_space/{dir_id}"
+    print(dirname)
+    subprocess.run(f"mkdir ./test_space/{dir_id}", shell=True)
 
     for file in files:
-        file.save(os.path.join(dirname, file.filename))
+        file.save(f"{dirname}/{file.filename}")
+
     # Replace the original output filename with "out.txt"
-    with open(os.join(dirname, "main.cpp"), "r") as f:
-        text = f.read()
-    of_name = re.search(r"ofstream(.*?)\(").group(1)
-    text = re.sub(r"ofstream(.*);", f"ofstream{of_name}(out.txt)", text)
-    with open(os.join(dirname, "main.cpp"), "w") as f:
+    try:
+        with open(f"{dirname}/Project4_main.cpp", "r") as f:
+            text = f.read()
+    except:
+        return jsonify({"msg": "You did not submit Project4_main.cpp"}), 206
+    of_name = re.search(r"ofstream(.*)\(", text).group(1)
+    text = re.sub(r"ofstream(.*);", f"ofstream{of_name}(\"out.txt\");", text)
+    with open(f"{dirname}/Project4_main.cpp", "w") as f:
         f.write(text)
 
     # Create testing files from the database
     test_id = request.form.get("test_id")
     test_files = db_session.query(TestFiles).filter(TestFiles.test_id == test_id).all()
     for test_file in test_files:
-        with open(os.join(dirname, test_file.filename), "w") as f:
+        with open(f"{dirname}/{test_file.filename}", "w") as f:
             f.write(test_file.file_content)
 
     # Push the tuple (sid, dirname, test_id) onto the queue
     lock.acquire()
-    test_queue.put((sid, dirname, test_id))
+    test_queue.put((client_id, dirname, test_id))
     lock.release()
+
+    print("task added to queue")
+
     return jsonify({"msg": "Test is waiting for execution"}), 202
 
 
-# Initialize the connection and echo back the corresponding session id
-@socketio.on("connect")
-def connect():
-    print(f"sid: {request.sid}")
-    clients.append(request.sid)
-    emit("connected", {"sid": request.sid}, room=request.sid)
+@app.route("/api/get_result/<client_id>", methods=["GET"])
+def get_result(client_id):
+    lock.acquire()
+    if client_id in results:
+        test_result = results.pop(client_id)
+        code = 200
+        lock.release()
+    else:
+        test_result = "Test is yet to complete"
+        code = 202
+        lock.release()
+    return jsonify({"test_result": test_result}), code
 
-
-@socketio.on("disconnect")
-def disconnect():
-    clients.remove(request.sid)
-    print(f"Client {request.sid} disconnected")
 
 def tester():
     while(True):
+        lock.acquire()
         if test_queue.empty():
             time.sleep(0.1)
+            lock.release()
             continue
         
-        lock.acquire
-        task = test_queue.get() # (sid, dirname, test_id)
+        task = test_queue.get() # (client_id, dirname, test_id)
         print(f"task: {task}\n")
         lock.release()
 
         # run the test
-        client_sid, dirname, test_id = task
+        client_id, dirname, test_id = task
         test = db_session.query(Tests).filter(Tests.id == test_id).first()
-        test_process = subprocess.run(test.command, shell=True)
+        # cd {}; python3 test_maker.py; g++ -std=c++11 Project4_main.cpp; 
+        # ./a.out python_test.txt; python3 test_verifier.py > log.txt
+        command = test.command.format(dirname)
+        test_process = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
 
-        # Echo results back to client
+        lock.acquire()
         if test_process.returncode != 0:
-            emit("completed", {
-                "test_result": "Something went wrong, please check if your program can be compiled"
-            }, room=client_sid)
+            results[client_id] = "Something went wrong, please check if your program can be compiled"
+            lock.release()
             continue
 
-        with open(os.join(dirname, "log.txt"), "r") as f:
+        with open(f"{dirname}/log.txt", "r") as f:
             test_result = f.read()
-            emit("completed", {
-                "test_result": test_result
-            }, room=client_sid)
+            results[client_id] = test_result
+        lock.release()
+
+        subprocess.run(f"rm -rf {dirname}", shell=True)
 
 
 if __name__ == "__main__":
     tester_thread = threading.Thread(target=tester)
-    socketio.run(app, "localhost", 1453)
-    # app.run("0.0.0.0", 1453)
-    # tester_thread.start()
+    tester_thread.start()
+
+    app.run("127.0.0.1", 1453)
+    
 
 

@@ -1,2 +1,3 @@
-gevent-websocket
-eventlet
+flask
+sqlalchemy
+pymysql
