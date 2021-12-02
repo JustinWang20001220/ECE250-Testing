@@ -1,0 +1,4 @@
+flask
+sqlalchemy
+pymysql
+cloud-sql-python-connector
