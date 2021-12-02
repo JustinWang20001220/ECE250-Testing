@@ -5,10 +5,15 @@ export default function Navbar() {
   return (
     <nav className='navbar'>
       <div className='nav-center'>
-        <Link to='/'>
-          {/* <img src={logo} alt='cocktail db logo' className='logo' /> */}
-          ECE250-Testing
-        </Link>
+        <ul className='nav-links'>
+          <li>
+            <Link to='/'>
+              {/* <img src={logo} alt='cocktail db logo' className='logo' /> */}
+              ECE250-Testing
+            </Link>
+          </li>
+        </ul>
+        
         <ul className='nav-links'>
           <li>
             <Link to='/'>home</Link>

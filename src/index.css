@@ -317,6 +317,49 @@ Form
 .formsubmit div{
   margin-left: 100px;
 }
+
+.sumbitForm{
+  align-items: center;
+  margin: auto;
+  /* border: 5px solid green; */
+  width: 800px;
+  padding: 5px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  background-color: rgb(218, 209, 209);
+}
+
+.testResult{
+  /* border: 5px solid green; */
+  width: 800px;
+  margin: auto;
+  padding: 10px 5px 5px 5px;
+  border-radius: 5px;
+  background-color: white;
+  min-height: 200px;
+}
+
+.testResult > p{
+  font-size: 24px;
+}
+
+
+.asd{
+  height: 0px;width:0px; overflow:hidden;
+}
+
+.flexForm{
+  display: flex;
+
+}
+
+.flex-left{
+  flex: 50%;
+}
+
+.flex-right{
+  flex: 50%;
+}
 /* 
 ====== 
 Cocktail
@@ -344,10 +387,13 @@ Cocktail
   margin-right: 0.5rem;
 }
 .drink-data {
+  display: inline-block;
   background: var(--primaryLightColor);
   padding: 0.25rem 0.5rem;
   border-radius: var(--mainBorderRadius);
   color: var(--primaryColor);
+  font-size: 30px;
+  width: 400px;
 }
 .drink-info {
   padding-top: 2rem;

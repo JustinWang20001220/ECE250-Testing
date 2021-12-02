@@ -11,14 +11,14 @@ export default function SingleTest() {
     const [test, setTest] = useState({
         testId: 0,
         testName: "No Test",
-        testResult: "none"
+        testResult: "NOT TESTED YET"
     })
 
     useEffect(() => {
         const newTest = {
             testId: testId,
             testName: testName,
-            testResult: "none"
+            testResult: "NOT TESTED YET"
         }
         setTest(newTest)
 
@@ -105,6 +105,10 @@ export default function SingleTest() {
             setLoading({isLoading: false, message: ""})
         })
     }
+
+    function handleClick() {
+        document.getElementById('file').click();
+    }
     
     if (loading.isLoading) {
         return <Loading/>
@@ -121,11 +125,23 @@ export default function SingleTest() {
                 </Link>
                 <h2 className='section-title'>{testName}</h2>
 
-                <form onSubmit={handleSubmit}>
-                    <input type="file" id="file" multiple name="file" />
-                    <br />
-                    <button type="submit" className="btn">Upload Test Files</button>
-                </form>
+                <div className='sumbitForm'>
+                    <form onSubmit={handleSubmit} className='flexForm'>
+                        <div className='flex-left'> 
+                            <div className='btn' onClick={handleClick}>
+                                Choose Files
+                            </div>
+                            <div className='asd'> 
+                                <input type="file" id="file" multiple name="file" />
+                            </div>
+                        </div>
+                        <div className='flex-right'>
+                            <button type="submit" className="btn">Upload Test Files</button>
+                        </div>
+                        
+                    </form>
+                </div>
+                
 
 
                 {/* Form to submit files */}
@@ -137,10 +153,13 @@ export default function SingleTest() {
                     {/* <button type="button" onclick="onSubmit()">Submit</button> */}
                 {/* </form> */}
                 
-
-                <p>
-                    <span className='drink-data'>Test Result :</span> {testResult}
-                </p>
+                <div className='testResult'>
+                    <p>
+                        {/* <span className='drink-data'>Test Result</span>  */}
+                        <p>{testResult}</p>
+                    </p>
+                </div>
+                
             </section>
         )
     }
