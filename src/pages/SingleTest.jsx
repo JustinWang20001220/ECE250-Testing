@@ -27,13 +27,18 @@ export default function SingleTest() {
 
     useEffect(() => {
         const periodicFetch = setInterval(() => {
-            fetch(`/api/get_result/${randomId}`, {
+            if(!submitTest){
+                return
+            }
+            fetch(`https://backend-qnhlulg43q-pd.a.run.app/api/get_result/${randomId}`, {
+            // fetch(`http://192.168.1.100:8080/api/get_result/${randomId}`, {
                 method: "get"
             }).then((res) => {
                 if (res.status !== 200) {
                     return;
                 }
                 res.json().then((data) => {
+                    setSubmitTest(false)
                     setLoading({
                         isLoading: false,
                         message: ""
@@ -43,66 +48,49 @@ export default function SingleTest() {
                         testName: testName,
                         testResult: data.test_result
                     })
-                    // clearInterval(periodicFetch)
+                    clearInterval(periodicFetch)
                 })
             }).catch((err) => {
                 console.log("Fetch Error :-S", err);
             });
-        }, 500);
+        }, 5000);
       
         return () => clearInterval(periodicFetch);  
-    }, [])
-
-    // useEffect(() => {
-    //     const periodicFetch = setInterval(() => {
-    //         fetch(`/api/get_result/${randomId}`, {
-    //             method: "get"
-    //         }).then((res) => {
-    //             if (res.status !== 200) {
-    //                 return;
-    //             }
-    //             res.json().then((data) => {
-    //                 setLoading({
-    //                     isLoading: false,
-    //                     message: ""
-    //                 })
-    //                 setTest({
-    //                     testId: testId,
-    //                     testName: testName,
-    //                     testResult: data.test_result
-    //                 })
-    //                 clearInterval(periodicFetch)
-    //             })
-    //         }).catch((err) => {
-    //             console.log("Fetch Error :-S", err);
-    //         });
-    //     }, 500);
-      
-    //     return () => clearInterval(periodicFetch);  
-    // }, [submitTest])
+    }, [submitTest])
 
     function handleSubmit(event) {
         event.preventDefault()
 
         const newId = Math.floor(Math.random() * 10000)
+        console.log("newId ", newId)
         setRandomId(newId)
+        console.log("randomId ", randomId)
 
         let myForm = new FormData(event.target)
         myForm.append("test_id", testId)
-        myForm.append("client_id", randomId)
+        myForm.append("client_id", newId)
 
         setLoading({isLoading: true, message: ""})
         setSubmitTest(true)
-        fetch("/api/project4_submit_test", {
+        fetch("https://backend-qnhlulg43q-pd.a.run.app/api/project4_submit_test", {
+        // fetch("http://192.168.1.100:8080/api/project4_submit_test", {
             body: myForm,
             method: "post"
         }).then((response) => {
+            if(response.status != 202){
+                throw "Something is wrong"
+            }
             return response.json();
         }).then((data) => {
             setLoading({isLoading: true, message: data.msg})
         }).catch((e) => {
             setSubmitTest(false)
             setLoading({isLoading: false, message: ""})
+            setTest({
+                testId: testId,
+                testName: testName,
+                testResult: e
+            })
         })
     }
 
@@ -142,20 +130,8 @@ export default function SingleTest() {
                     </form>
                 </div>
                 
-
-
-                {/* Form to submit files */}
-                {/* <form enctype="multipart/form-data" id="upload-form" name="upload-form" className='formsubmit'>  */}
-                    {/* <div> */}
-                        {/* <label for="h_file">Choose File</label> */}
-                        {/* <input type="file" id="h_file" name="h_file" accept=".h" multiple/> */}
-                    {/* </div> */}
-                    {/* <button type="button" onclick="onSubmit()">Submit</button> */}
-                {/* </form> */}
-                
                 <div className='testResult'>
                     <p>
-                        {/* <span className='drink-data'>Test Result</span>  */}
                         <p>{testResult}</p>
                     </p>
                 </div>
