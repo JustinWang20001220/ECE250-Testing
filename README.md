@@ -1,6 +1,6 @@
 <h1>Deployment</h1>
 Backend<br/>
- - cd server <br/>
+1. cd server <br/>
 `gcloud builds submit --tag gcr.io/ece250-testing-server/backend` <br/>
 `gcloud run deploy --image gcr.io/ece250-testing-server/backend` <br/>
 <br/>
